@@ -7,7 +7,7 @@ module TicketService
     end
 
     def call
-      return Ticket.create!(@ticket_params)
+      Ticket.create!(@ticket_params)
     end
   end
 end
