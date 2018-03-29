@@ -9,8 +9,7 @@ module Api
     end
 
     def create
-      new_event = EventService::CreateEvent.new(create_params).call
-      generate_response(new_event)
+      generate_response(EventService::CreateEvent.call(create_params))
     end
 
     private

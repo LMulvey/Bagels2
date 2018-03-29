@@ -9,7 +9,7 @@ module Api
     end
 
     def create
-      new_user = UserService::CreateUser.new(create_params).call
+      new_user = UserService::CreateUser.call(create_params)
       generate_response(new_user)
     end
 

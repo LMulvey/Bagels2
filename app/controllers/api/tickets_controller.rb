@@ -9,7 +9,7 @@ module Api
     end
 
     def create
-      new_ticket = TicketService::CreateTicket.new(create_params).call
+      new_ticket = TicketService::CreateTicket.call(create_params)
       generate_response(new_ticket)
     end
 

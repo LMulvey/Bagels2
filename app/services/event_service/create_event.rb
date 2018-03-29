@@ -6,9 +6,16 @@ module EventService
       }.merge(params)
     end
 
+    def self.call(params = {})
+      new(params).call
+    end      
+
     def call
-      return handle_stop_event if @event_params[:event_type] == 'stop'
-      Event.create(@event_params)
+      if @event_params[:event_type] == "stop"
+        handle_stop_event
+      else 
+        Event.create!(@event_params)
+      end
     end
 
     private
@@ -16,8 +23,8 @@ module EventService
     def handle_stop_event
       Event.transaction do
         ticket = Ticket.find_by!(id: @event_params[:ticket_id])
-        ticket.update!(status: 'completed')
-        Event.create!(@event_params)
+        ticket.update!(:status => "completed")
+        event = Event.create!(@event_params)
       end
       return true
     end

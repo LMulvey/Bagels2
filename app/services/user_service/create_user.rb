@@ -6,8 +6,12 @@ module UserService
       }.merge(params)
     end
 
+    def self.call(params = {})
+      new(params).call
+    end      
+
     def call
-      User.create(@user_params)
+      User.create!(@user_params)
     end      
   end
 end
