@@ -1,7 +1,7 @@
 module Api
   class EventsController < ApiController
     def index
-      handle_index(Event)
+      handle_index(Event, index_params)
     end
 
     def show
@@ -16,7 +16,11 @@ module Api
 
     def create_params
       params.require(:event)
-        .permit(:event_type, :ticket_id)
+        .permit(:event_type, :ticket_id, :user_id)
+    end
+
+    def index_params
+      { limit: params[:limit], offset: params[:offset] }
     end
   end
 end

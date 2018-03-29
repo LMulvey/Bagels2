@@ -3,12 +3,16 @@ module Api::ApiHelper
     render(status: response_status(record), 
       json: {
         errors: response_errors(record), 
-        record: record
+        result: record
       })
   end
 
-  def handle_index(model)
-    all_records = model.all
+  def handle_index(model, incoming_params = {})
+    params = { 
+      limit: 50,
+      page: 1
+    }.merge(incoming_params)
+    all_records = paginate(model.all.order(created_at: :desc), params)
     render(status: :ok, json: all_records )
   end
 
@@ -20,7 +24,15 @@ module Api::ApiHelper
   end
 
   def response_errors(record)
-    return false if record.nil? || record.errors.empty?
+    return [] if record.nil? || record.errors.empty?
     record.errors.full_messages
+  end
+
+  def paginate(record, params)
+    page = params[:page].to_i - 1 # Keep page numbers natural (start at 0, req at 2)
+    limit = params[:limit].to_i
+    offset = page * limit
+
+    record.limit(limit).offset(offset)
   end
 end

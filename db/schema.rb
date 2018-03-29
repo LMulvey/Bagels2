@@ -17,10 +17,12 @@ ActiveRecord::Schema.define(version: 20180315232156) do
 
   create_table "events", force: :cascade do |t|
     t.bigint "ticket_id"
+    t.bigint "user_id"
     t.integer "event_type", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["ticket_id"], name: "index_events_on_ticket_id"
+    t.index ["user_id"], name: "index_events_on_user_id"
   end
 
   create_table "tickets", force: :cascade do |t|
@@ -33,8 +35,7 @@ ActiveRecord::Schema.define(version: 20180315232156) do
   end
 
   create_table "users", force: :cascade do |t|
-    t.string "first_name", null: false
-    t.string "last_name", null: false
+    t.string "name", null: false
     t.string "email", null: false
     t.integer "access_level", default: 0
     t.datetime "created_at", null: false
@@ -42,5 +43,6 @@ ActiveRecord::Schema.define(version: 20180315232156) do
   end
 
   add_foreign_key "events", "tickets"
+  add_foreign_key "events", "users"
   add_foreign_key "tickets", "users"
 end

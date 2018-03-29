@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "required": [ "result", "errors" ],
+  "properties": {
+    "errors": {
+      "type": "array"
+    },
+    "result": {
+      "type": "object",
+      "required": [
+        "id",
+        "description",
+        "event_id",
+        "user_id",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "id": { "type": "integer" },
+        "description": { "type": "string" },
+        "event_id": { "type": "integer" },
+        "user_id": { "type": "integer" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

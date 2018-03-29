@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "required": [ "result", "errors" ],
+  "properties": {
+    "errors": {
+      "type": "array"
+    },
+    "result": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "email",
+        "access_level",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "id": { "type": "integer" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "access_level": { "type": "integer" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}
