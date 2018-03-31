@@ -2,10 +2,12 @@ module EventService
   class Create < ApiBaseService
     def call
       return false if ticket_is_completed
-      
+
       if @params[:event_type] === "stop"
         handle_stop_event
-      else 
+      elsif measurement_required && measurement_not_present
+        raise ArgumentError
+      else
         Event.create!(@params)
       end
     end
@@ -25,6 +27,15 @@ module EventService
     def ticket_is_completed
       ticket = Ticket.find_by(id: @params[:ticket_id])
       true if ticket.status === "completed"
+    end
+
+    def measurement_required
+      @params[:event_type] === "pickup" || @params[:event_type] === "delivery"
+    end
+
+    def measurement_not_present
+      return true if @params[:measurement].blank?|| @params[:measurement_type].blank?
+      false
     end
   end
 end

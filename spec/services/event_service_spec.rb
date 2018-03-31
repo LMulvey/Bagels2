@@ -19,6 +19,17 @@ RSpec.describe EventService do
       expect { EventService::Create.call(event) }.to raise_error(ArgumentError)
     end
 
+    it "requires measurement and measurement_type if event_type is pickup or delivery" do
+      pickup = { ticket_id: @ticket.id, user_id: @user.id, event_type: "pickup" }
+      delivery = { ticket_id: @ticket.id, user_id: @user.id, event_type: "delivery" }
+      expect { EventService::Create.call(pickup) }.to raise_error(ArgumentError)
+      expect { EventService::Create.call(delivery) }.to raise_error(ArgumentError)
+      pickup_measured = { measurement: 400, measurement_type: "bagels" }.merge(pickup)
+      delivery_measured = { measurement: 25, measurement_type: "bagels" }.merge(delivery)
+      expect(EventService::Create.call(pickup_measured)).to be_instance_of(Event)
+      expect(EventService::Create.call(delivery_measured)).to be_instance_of(Event)
+    end
+
     it "parent ticket status set to COMPLETED, completed_at set when event_type: stop" do
       expect(@ticket.status).to eq("active")
       event = { ticket_id: @ticket.id, event_type: "stop", user_id: @user.id }
