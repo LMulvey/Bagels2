@@ -9,18 +9,30 @@ module Api
     end
 
     def create
-      generate_response(EventService::CreateEvent.call(create_params))
+      generate_response(EventService::Create.call(create_params))
+    end
+
+    def update
+      call_params = { id: params[:id] }.merge(update_params)
+      update_event = EventService::Update.call(call_params)
+      generate_response(update_event)
+    end
+
+    def destroy
+      destroy_event = EventService::Destroy.call(id: params[:id])
+      generate_response(destroy_event)
     end
 
     private
 
     def create_params
       params.require(:event)
-        .permit(:event_type, :ticket_id, :user_id)
+        .permit(:event_type, :ticket_id, :measurement, :measurement_type, :user_id)
     end
 
-    def index_params
-      { limit: params[:limit], offset: params[:offset] }
+    def update_params
+      params.require(:event)
+        .permit(:event_type, :ticket_id, :measurement, :measurement_type, :user_id)
     end
   end
 end

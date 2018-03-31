@@ -19,6 +19,8 @@ ActiveRecord::Schema.define(version: 20180315232156) do
     t.bigint "ticket_id"
     t.bigint "user_id"
     t.integer "event_type", null: false
+    t.integer "measurement"
+    t.string "measurement_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["ticket_id"], name: "index_events_on_ticket_id"
@@ -29,6 +31,7 @@ ActiveRecord::Schema.define(version: 20180315232156) do
     t.bigint "user_id"
     t.string "description"
     t.integer "status", default: 0
+    t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_tickets_on_user_id"

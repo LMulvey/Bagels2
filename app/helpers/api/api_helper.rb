@@ -20,11 +20,12 @@ module Api::ApiHelper
 
   def response_status(record)
     return :not_found if record.nil?
-    record.errors.any? ? :unprocessable_entity : :ok
+    record.errors.any? || !record ? :unprocessable_entity : :ok
   end
 
   def response_errors(record)
     return [] if record.nil? || record.errors.empty?
+    return [ "Error performing task. Contact administrator" ] if !record
     record.errors.full_messages
   end
 

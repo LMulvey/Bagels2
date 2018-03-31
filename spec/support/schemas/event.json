@@ -18,6 +18,8 @@
       "properties": {
         "id": { "type": "integer" },
         "event_type": { "type": "string" },
+        "measurement": { "type": ["string", "null"] },
+        "measurement_type": { "type": ["string", "null"] },
         "ticket_id": { "type": "integer" },
         "user_id": { "type": "integer" },
         "created_at": { "type": "string", "format": "date-time" },

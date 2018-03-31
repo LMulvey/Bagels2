@@ -10,16 +10,18 @@
       "required": [
         "id",
         "description",
-        "event_id",
+        "status",
         "user_id",
+        "completed_at",
         "created_at",
         "updated_at"
       ],
       "properties": {
         "id": { "type": "integer" },
         "description": { "type": "string" },
-        "event_id": { "type": "integer" },
+        "status": { "type": "string" },
         "user_id": { "type": "integer" },
+        "completed_at": { "type": ["string", "null"], "format": "date-time" },
         "created_at": { "type": "string", "format": "date-time" },
         "updated_at": { "type": "string", "format": "date-time" }
       }

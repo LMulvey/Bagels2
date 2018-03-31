@@ -1,6 +1,6 @@
 class Ticket < ApplicationRecord
   belongs_to :user
-  has_many :events
+  has_many :events, dependent: :destroy
   
   enum status: { active: 0, completed: 1 }
   validates :description, presence: true

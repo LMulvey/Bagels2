@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe Event, type: :model do
+RSpec.describe "EventModel", type: :model do
   before(:each) do
     @user = FactoryBot.create(:user)
     @ticket = FactoryBot.create(:ticket, user_id: @user.id)

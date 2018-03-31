@@ -44,7 +44,7 @@ RSpec.describe "Events - Request Spec", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
-    it "returns JSON with a valid event ID" do
+    it "returns JSON with matching schema" do
       event = FactoryBot.create(:event, ticket_id: @ticket.id, user_id: @user.id)
       get api_event_path(id: event.id)
       expect(response).to have_http_status(:ok)
@@ -53,6 +53,7 @@ RSpec.describe "Events - Request Spec", type: :request do
     end
   end
 
+  # Methods
   def response_body
     JSON.parse(response.body)
   end
