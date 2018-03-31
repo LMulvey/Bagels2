@@ -41,7 +41,7 @@ RSpec.describe TicketService do
       @ticket = FactoryBot.create(:ticket, user_id: @user.id, description: "Wow!")
     end
 
-    it "destroys a ticket and all it's events" do
+    it "destroys a ticket and all its events" do
       10.times { FactoryBot.create(:event, ticket_id: @ticket.id, user_id: @user.id) }
       expect(@ticket.events.count).to eq(10)
       expect(TicketService::Destroy.call(@ticket.id)).to be_instance_of(Ticket)
