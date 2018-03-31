@@ -15,10 +15,3 @@ Pickup, with measurement of bagels picked-up
 Delivery, with measurement of bagels delivered
 Stop, with measurement of hours worked
 Tickets have two statuses: active and completed. Once a stop event is created, its ticket should change from active to completed, and record a completion timestamp. The corporate office should be notified by SMS.
-
-# Task
-
-Create a Rails 5 API to support creating tickets and events as defined above. SMS messages should be sent using a third party service. And please do not use Rails scaffolding and model callbacks ;)
-
-Good luck! Let me know if you need clarification on anything.
-Jordan
