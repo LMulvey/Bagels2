@@ -27,7 +27,7 @@ module Api
 
     def create_params
       params.require(:event)
-        .permit(:event_type, :ticket_id, :measurement, :measurement_type, :user_id)
+      .permit(:event_type, :ticket_id, :measurement, :measurement_type, :user_id)
     end
 
     def update_params

@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe EventService do
   before(:each) do
+    ActiveJob::Base.queue_adapter = :test
     @user = FactoryBot.create(:user)
     @ticket = FactoryBot.create(:ticket, user_id: @user.id)
   end
@@ -30,12 +31,13 @@ RSpec.describe EventService do
       expect(EventService::Create.call(delivery_measured)).to be_instance_of(Event)
     end
 
-    it "parent ticket status set to COMPLETED, completed_at set when event_type: stop" do
+    it "parent ticket status set to COMPLETED, completed_at set, SMS job queued when event_type: stop" do
       expect(@ticket.status).to eq("active")
       event = { ticket_id: @ticket.id, event_type: "stop", user_id: @user.id }
       expect(EventService::Create.call(event)).to be_instance_of(Event)
       expect(@ticket.reload.status).to eq("completed")
       expect(@ticket.completed_at).not_to be_nil
+      expect(SendTextMessageJob).to have_been_enqueued
     end
 
     it "parent ticket status/completed_at not affected when any other event_type is sent" do
