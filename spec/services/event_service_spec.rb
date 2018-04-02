@@ -11,7 +11,8 @@ RSpec.describe EventService do
     it "creates an event" do
       before_count = Event.count
       event = { ticket_id: @ticket.id, event_type: "start", user_id: @user.id }
-      expect(EventService::Create.call(event)).to be_instance_of(Event)
+      result = EventService::Create.call(event)
+      expect(result[:record]).to be_instance_of(Event)
       expect(Event.count).to eq(before_count + 1)
     end
 
@@ -21,20 +22,21 @@ RSpec.describe EventService do
     end
 
     it "requires measurement and measurement_type if event_type is pickup or delivery" do
-      pickup = { ticket_id: @ticket.id, user_id: @user.id, event_type: "pickup" }
-      delivery = { ticket_id: @ticket.id, user_id: @user.id, event_type: "delivery" }
-      expect { EventService::Create.call(pickup) }.to raise_error(ArgumentError)
-      expect { EventService::Create.call(delivery) }.to raise_error(ArgumentError)
-      pickup_measured = { measurement: 400, measurement_type: "bagels" }.merge(pickup)
-      delivery_measured = { measurement: 25, measurement_type: "bagels" }.merge(delivery)
-      expect(EventService::Create.call(pickup_measured)).to be_instance_of(Event)
-      expect(EventService::Create.call(delivery_measured)).to be_instance_of(Event)
+      ["delivery", "pickup"].each do | event_type |
+        create_hash = { ticket_id: @ticket.id, user_id: @user.id, event_type: event_type }
+        result = EventService::Create.call(create_hash)
+        expect(result[:errors]).not_to be_empty
+        measured = { measurement: 400, measurement_type: "bagels" }.merge(create_hash)
+        new_result = EventService::Create.call(measured)
+        expect(new_result[:record]).to be_instance_of(Event)
+      end
     end
 
     it "parent ticket status set to COMPLETED, completed_at set, SMS job queued when event_type: stop" do
       expect(@ticket.status).to eq("active")
       event = { ticket_id: @ticket.id, event_type: "stop", user_id: @user.id }
-      expect(EventService::Create.call(event)).to be_instance_of(Event)
+      result = EventService::Create.call(event)
+      expect(result[:record]).to be_instance_of(Event)
       expect(@ticket.reload.status).to eq("completed")
       expect(@ticket.completed_at).not_to be_nil
       expect(SendTextMessageJob).to have_been_enqueued
@@ -43,7 +45,8 @@ RSpec.describe EventService do
     it "parent ticket status/completed_at not affected when any other event_type is sent" do
       expect(@ticket.status).to eq("active")
       event = { ticket_id: @ticket.id, event_type: "start", user_id: @user.id }
-      expect(EventService::Create.call(event)).to be_instance_of(Event)
+      result = EventService::Create.call(event)
+      expect(result[:record]).to be_instance_of(Event)
       expect(@ticket.reload.status).to eq("active")
       expect(@ticket.completed_at).to be_nil
     end
@@ -51,7 +54,8 @@ RSpec.describe EventService do
     it "will not create an event if ticket status is 'completed'" do
       completed_ticket = FactoryBot.create(:ticket, user_id: @user.id, status: "completed")
       event = { ticket_id: completed_ticket.id, user_id: @user.id, event_type: "start" }
-      expect(EventService::Create.call(event)).to eq(false)
+      result = EventService::Create.call(event)
+      expect(result[:errors]).not_to be_empty
     end
   end
 
@@ -62,7 +66,8 @@ RSpec.describe EventService do
 
     it "updates an event" do
       update_hash = { id: @event.id, event_type: "delivery" }
-      expect(EventService::Update.call(update_hash)).to be_instance_of(Event)
+      update = EventService::Update.call(update_hash)
+      expect(update[:record]).to be_instance_of(Event)
       expect(@event.reload.event_type).to eq("delivery")
     end
 
@@ -74,7 +79,8 @@ RSpec.describe EventService do
     it "changes parent ticket to COMPLETED & completed_at when update is a STOP event" do
       update_hash = { id: @event.id, event_type: "stop" }
       expect(@ticket.status).to eq("active")
-      expect(EventService::Update.call(update_hash)).to be_instance_of(Event)
+      result = EventService::Update.call(update_hash)
+      expect(result[:record]).to be_instance_of(Event)
       expect(@ticket.reload.status).to eq("completed")
       expect(@event.reload).to eq(@event)
     end
@@ -86,17 +92,20 @@ RSpec.describe EventService do
     end
 
     it "destroys an event" do
-      expect(EventService::Destroy.call(@event.id)).to be_instance_of(Event)
+      result = EventService::Destroy.call(id: @event.id)
+      expect(result[:record]).to be_instance_of(Event)
       expect { @event.reload }.to raise_error(ActiveRecord::RecordNotFound)
     end
 
     it "changes parent ticket to ACTIVE & completed_at to nil when destroy is a STOP event" do
       update_hash = { id: @event.id, event_type: "stop" }
       expect(@ticket.status).to eq("active")
-      expect(EventService::Update.call(update_hash)).to be_instance_of(Event)
+      result = EventService::Update.call(update_hash)
+      expect(result[:record]).to be_instance_of(Event)
       expect(@ticket.reload.status).to eq("completed")
       expect(@event.reload).to eq(@event)
-      expect(EventService::Destroy.call(@event.id)).to be_instance_of(Event)
+      destroy = EventService::Destroy.call(id: @event.id)
+      expect(destroy[:record]).to be_nil
       expect { @event.reload }.to raise_error(ActiveRecord::RecordNotFound)
       expect(@ticket.reload.status).to eq("active")
       expect(@ticket.completed_at).to be_nil

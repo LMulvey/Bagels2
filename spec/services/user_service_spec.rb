@@ -10,7 +10,8 @@ RSpec.describe UserService do
     it "creates a user" do
       before_count = User.count
       user = { name: "Johnny Boy", email: "dogs@dogs.com" }
-      expect(UserService::Create.call(user)).to be_instance_of(User)
+      result = UserService::Create.call(user)
+      expect(result[:record]).to be_instance_of(User)
       expect(User.count).to eq(before_count + 1)
     end
 
@@ -23,7 +24,8 @@ RSpec.describe UserService do
   describe "::Update" do
     it "updates a User" do
       update_hash = { id: @user.id, name: "Jeffery Biggs" }
-      expect(UserService::Update.call(update_hash)).to be_instance_of(User)
+      result = UserService::Update.call(update_hash)
+      expect(result[:record]).to be_instance_of(User)
       expect(@user.reload.name).to eq("Jeffery Biggs")
     end
 
@@ -35,7 +37,8 @@ RSpec.describe UserService do
 
   describe "::Destroy" do
     it "destroys a user" do
-      expect(UserService::Destroy.call(@user.id)).to be_instance_of(User)
+      result = UserService::Destroy.call(id: @user.id)
+      expect(result[:record]).to be_instance_of(User)
       expect { @user.reload }.to raise_error(ActiveRecord::RecordNotFound)
     end
   end

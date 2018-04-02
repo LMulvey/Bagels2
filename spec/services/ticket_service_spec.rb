@@ -9,7 +9,8 @@ RSpec.describe TicketService do
     it "creates a ticket" do
       before_count = Ticket.count
       ticket = { user_id: @user.id, description: "Wow!" }
-      expect(TicketService::Create.call(ticket)).to be_instance_of(Ticket)
+      result = TicketService::Create.call(ticket)
+      expect(result[:record]).to be_instance_of(Ticket)
       expect(Ticket.count).to eq(before_count + 1)
     end
 
@@ -26,7 +27,8 @@ RSpec.describe TicketService do
 
     it "updates a ticket" do
       update_hash = { id: @ticket.id, description: "Double wow!" }
-      expect(TicketService::Update.call(update_hash)).to be_instance_of(Ticket)
+      result = TicketService::Update.call(update_hash)
+      expect(result[:record]).to be_instance_of(Ticket)
       expect(@ticket.reload.description).to eq("Double wow!")
     end
 
@@ -44,7 +46,8 @@ RSpec.describe TicketService do
     it "destroys a ticket and all its events" do
       10.times { FactoryBot.create(:event, ticket_id: @ticket.id, user_id: @user.id) }
       expect(@ticket.events.count).to eq(10)
-      expect(TicketService::Destroy.call(@ticket.id)).to be_instance_of(Ticket)
+      result = TicketService::Destroy.call(id: @ticket.id)
+      expect(result[:record]).to be_instance_of(Ticket)
       expect(Event.find_by(ticket_id: @ticket.id)).to be_nil
       expect { @ticket.reload }.to raise_error(ActiveRecord::RecordNotFound)
     end

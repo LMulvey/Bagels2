@@ -1,7 +1,7 @@
 class SendTextMessageJob < ApplicationJob
   queue_as :default
 
-  def perform(message, to = Rails.application.secrets.sms_default_number)
-    TextMessageService.call(message, to)
+  def perform(params)
+    TextMessageService.call(message: params[:message], to: params[:to])
   end
 end

@@ -5,23 +5,23 @@ module Api
     end
 
     def show
-      generate_response(User.find_by(id: params[:id]))
+      handle_show(User)
     end
 
     def create
       new_user = UserService::Create.call(create_params)
-      generate_response(new_user)
+      handle_response(new_user)
     end
 
-    def create
+    def update
       call_params = { id: params[:id] }.merge(update_params)
       update_user = UserService::Update.call(call_params)
-      generate_response(update_user)
+      handle_response(update_user)
     end
 
-    def create
-      destroy_user = UserService::Destroy.call(params[:id])
-      generate_response(destroy_user)
+    def destroy
+      destroy_user = UserService::Destroy.call(id: params[:id])
+      handle_response(destroy_user)
     end
 
     private

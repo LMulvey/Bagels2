@@ -1,32 +1,37 @@
 module Api::ApiHelper
-  def generate_response(record)
-    render(status: response_status(record), 
+  
+  private
+
+  def handle_response(options)
+    if options.nil?
+      options = {
+        status: :internal_server_error,
+        error: [ "Error generating response. Server error." ],
+        record: nil
+      }
+    end
+    render(status: options[:status], 
       json: {
-        errors: response_errors(record), 
-        result: record
+        errors: options[:errors], 
+        record: options[:record]
       })
   end
 
-  def handle_index(model, incoming_params = {})
-    params = { 
-      limit: 50,
-      page: 1
-    }.merge(incoming_params)
+  def handle_index(model, params = {})
+    params[:limit] = params[:limit].nil? ? 50 : params[:limit]
+    params[:page] = params[:page].nil? ? 1 : params[:page]
     all_records = paginate(model.all.order(created_at: :desc), params)
-    render(status: :ok, json: all_records )
+    handle_response(status: :ok, errors: [], record: all_records)
   end
 
-  private
-
-  def response_status(record)
-    return :not_found if record.nil?
-    record.errors.any? || !record ? :unprocessable_entity : :ok
+  def handle_show(model)
+    record = model.find_by(id: params[:id])
+    status = record.nil? ? :not_found : :ok
+    handle_response(status: status, errors: [], record: record)
   end
 
-  def response_errors(record)
-    return [] if record.nil? || record.errors.empty?
-    return [ "Error performing task. Contact administrator" ] if !record
-    record.errors.full_messages
+  def index_params
+    { limit: params[:limit], page: params[:offset] }
   end
 
   def paginate(record, params)

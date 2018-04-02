@@ -1,11 +1,11 @@
 {
   "type": "object",
-  "required": [ "result", "errors" ],
+  "required": [ "record", "errors" ],
   "properties": {
     "errors": {
       "type": "array"
     },
-    "result": {
+    "record": {
       "type": "object",
       "required": [
         "id",

@@ -20,7 +20,7 @@ RSpec.describe "Tickets - Request Spec", type: :request do
       it "enforces record limit" do
         6.times { FactoryBot.create(:ticket, description: "Wow!", user_id: @user.id) }
         get api_tickets_path, params: { limit: 5 }
-        expect(response_body.count).to eq(5)
+        expect(response_body["record"].count).to eq(5)
       end
 
       it "returns appropriate pages" do
@@ -28,11 +28,11 @@ RSpec.describe "Tickets - Request Spec", type: :request do
         first_id = Ticket.first.id
         last_id = Ticket.last.id
         get api_tickets_path, params: { limit: 5, page: 2 }
-        expect(response_body.count).to eq(5)
+        expect(response_body["record"].count).to eq(5)
 
         # Returns data in DESC by created_at by default
-        expect(response_body[0]["id"]).to eq(last_id)
-        expect(response_body[4]["id"]).to eq(first_id + 5)
+        expect(response_body["record"][0]["id"]).to eq(last_id)
+        expect(response_body["record"][4]["id"]).to eq(first_id + 5)
       end
     end
   end
@@ -49,6 +49,51 @@ RSpec.describe "Tickets - Request Spec", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.content_type).to eq('application/json')
       expect(response).to match_response_schema("ticket")
+    end
+  end
+
+  describe "POST /tickets" do
+    before(:each) do
+      @user = FactoryBot.create(:user)
+      @params = { ticket: { user_id: @user.id, description: "hello there" } }
+    end
+
+    it "creates a ticket" do
+      post api_tickets_path, params: @params
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to eq('application/json')
+      expect(response).to match_response_schema("ticket")
+    end
+  end
+
+  describe "PUT /tickets/:id" do
+    before(:each) do
+      @user = FactoryBot.create(:user)
+      @ticket = FactoryBot.create(:ticket, user_id: @user.id, description: "Cool")
+    end
+
+    it "updates a ticket" do
+      put api_ticket_path(@ticket), params: { ticket: { description: "wow that's neat" } }
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to eq('application/json')
+      expect(response).to match_response_schema("ticket")
+      expect(response_body["record"]["description"]).to eq("wow that's neat")
+    end
+  end
+
+  describe "DELETE /tickets/:id" do
+    before(:each) do
+      @user = FactoryBot.create(:user)
+      @ticket = FactoryBot.create(:ticket, user_id: @user.id)
+    end
+
+    it "deletes a ticket" do
+      count = Ticket.count
+      delete api_ticket_path(@ticket)
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to eq('application/json')
+      expect(response).to match_response_schema("ticket")
+      expect(Ticket.count).to eq(count-1)
     end
   end
 

@@ -1,14 +1,21 @@
 module EventService
   class Create < ApiBaseService
     def call
-      return false if ticket_is_completed
+      @ticket = Ticket.find_by(id: @params[:ticket_id])
+      return response(:unprocessable_entity, ["Ticket does not exist."], nil) if @ticket.nil?
+      return response(:unprocessable_entity, ["Ticket is locked. No more events can be added."], nil) if ticket_is_completed
 
       if @params[:event_type] === "stop"
         handle_stop_event
       elsif measurement_required && measurement_not_present
-        raise ArgumentError
+        response(:unprocessable_entity, ["Measurement details required for PICKUP or DELIVERY."], nil)
       else
-        Event.create!(@params)
+        new_event = Event.create!(@params)
+        if new_event.errors.any?
+          response(:unprocessable_entity, new_event.errors.full_messages, nil)
+        else
+          response(:ok, [], new_event)
+        end
       end
     end
 
@@ -22,16 +29,15 @@ module EventService
           @event.save!
         end
       if is_successful
-        SendTextMessageJob.perform_later(ticket_complete_message)        
-        @event
+        SendTextMessageJob.perform_later(ticket_complete_message(@event))        
+        response(:ok, [], @event)
       else
-        false
+        response(:unprocessable_entity, [ "Error creating Ticket." ], nil)
       end
     end
 
     def ticket_is_completed
-      ticket = Ticket.find_by(id: @params[:ticket_id])
-      true if ticket.status === "completed"
+      @ticket.status === "completed"
     end
 
     def measurement_required
@@ -41,12 +47,6 @@ module EventService
     def measurement_not_present
       return true if @params[:measurement].blank?|| @params[:measurement_type].blank?
       false
-    end
-
-    def ticket_complete_message
-      hours_worked = (@event.ticket.completed_at - @event.ticket.created_at) / 1.hours
-      sms_message = "Ticket ##{@event.ticket.id} has been COMPLETED as of #{@event.ticket.completed_at}!\n"
-      sms_message += "Total hours worked: #{hours_worked}"
     end
   end
 end

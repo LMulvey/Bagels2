@@ -6,19 +6,29 @@ module EventService
         handle_stop_event
       else 
         handle_event_update
-        @event
+        if @event.errors.any?
+          response(:unprocessable_entity, @event.errors.full_messages, nil)
+        else
+          response(:ok, [], @event)
+        end
       end
     end
 
     private
 
     def handle_stop_event
-      Event.transaction do
+      is_successful = Event.transaction do
         ticket = Ticket.find_by!(id: @event[:ticket_id])
         ticket.update!(:status => "completed", :completed_at => DateTime.now)
         handle_event_update
       end
-      @event
+
+      if is_successful
+        SendTextMessageJob.perform_later(ticket_complete_message(@event))
+        response(:ok, [], @event)
+      else
+        response(:unprocessable_entity, ["Unable to update Event. Contact administrator."], nil)
+      end
     end
 
     def handle_event_update
