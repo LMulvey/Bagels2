@@ -10,8 +10,10 @@ Daniel needs to get paid faster; therefore, he wants the ability to create his t
 # Feature
 
 A ticket is a digital document that has many events, which represent the execution of an order. Events can by of type start, pickup, delivery, or stop, and an event can record an arbitrary measurement. The simplified event sequence is as follows:
-Start
-Pickup, with measurement of bagels picked-up
-Delivery, with measurement of bagels delivered
-Stop, with measurement of hours worked
+
+* Start
+* Pickup, with measurement of bagels picked-up
+* Delivery, with measurement of bagels delivered
+* Stop, with measurement of hours worked
+
 Tickets have two statuses: active and completed. Once a stop event is created, its ticket should change from active to completed, and record a completion timestamp. The corporate office should be notified by SMS.

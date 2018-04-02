@@ -32,14 +32,24 @@ RSpec.describe EventService do
       end
     end
 
-    it "parent ticket status set to COMPLETED, completed_at set, SMS job queued when event_type: stop" do
+    it "measurements set to hours worked, parent ticket set COMPLETED, completed_at set, SMS job queued when event_type: stop" do
       expect(@ticket.status).to eq("active")
+      FactoryBot.create(:event, ticket_id: @ticket.id, user_id: @user.id, event_type: "start", created_at: 3.days.ago)
       event = { ticket_id: @ticket.id, event_type: "stop", user_id: @user.id }
       result = EventService::Create.call(event)
       expect(result[:record]).to be_instance_of(Event)
       expect(@ticket.reload.status).to eq("completed")
       expect(@ticket.completed_at).not_to be_nil
+      expect(Event.last.measurement).to eq(72)
+      expect(Event.last.measurement_type).to eq("hours_worked")
       expect(SendTextMessageJob).to have_been_enqueued
+    end
+
+    it "does not allow STOP events without a START event" do
+      event = { ticket_id: @ticket.id, event_type: "stop", user_id: @user.id }
+      result = EventService::Create.call(event)
+      expect(result[:errors][0]).to eq("Start event required before issuing stop event.")
+      expect(result[:record]).to be_nil
     end
 
     it "parent ticket status/completed_at not affected when any other event_type is sent" do
@@ -76,13 +86,26 @@ RSpec.describe EventService do
       expect { EventService::Update.call(update_hash) }.to raise_error(ArgumentError)
     end
 
-    it "changes parent ticket to COMPLETED & completed_at when update is a STOP event" do
+    it "does not allow STOP events without a START event" do
+      new_ticket = FactoryBot.create(:ticket, user_id: @user.id)
+      new_event = FactoryBot.create(:event, user_id: @user.id, ticket_id:  new_ticket.id, event_type: "delivery", measurement_type: "hours_worked", measurement: 41)
+      event = { id: new_event.id, event_type: "stop", user_id: @user.id }
+      result = EventService::Update.call(event)
+      expect(result[:errors][0]).not_to be_empty
+      expect(result[:record]).to be_nil
+    end
+
+    it "measurements set to hours worked, parent ticket set COMPLETED, completed_at set, SMS job queued when event_type: stop" do
+      FactoryBot.create(:event, ticket_id: @ticket.id, user_id: @user.id, event_type: "start")
       update_hash = { id: @event.id, event_type: "stop" }
       expect(@ticket.status).to eq("active")
       result = EventService::Update.call(update_hash)
       expect(result[:record]).to be_instance_of(Event)
       expect(@ticket.reload.status).to eq("completed")
       expect(@event.reload).to eq(@event)
+      expect(@event.reload.measurement).not_to be_nil
+      expect(@event.reload.measurement_type).to eq("hours_worked")
+      expect(SendTextMessageJob).to have_been_enqueued
     end
   end
 

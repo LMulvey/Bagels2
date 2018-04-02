@@ -22,10 +22,15 @@ module EventService
     private
 
     def handle_stop_event
+      start_event = @ticket.events.find_by(event_type: "start")
+      return no_stop_without_start if no_start_event(start_event)
+
+      completion_time = handle_completion_time(start_event)
+
       @event = Event.new(@params)
+
       is_successful = Event.transaction do
-          ticket = Ticket.find_by!(id: @params[:ticket_id])
-          ticket.update!(:status => "completed", :completed_at => DateTime.now)
+          @ticket.update!(:status => "completed", :completed_at => completion_time)
           @event.save!
         end
       if is_successful
@@ -47,6 +52,23 @@ module EventService
     def measurement_not_present
       return true if @params[:measurement].blank?|| @params[:measurement_type].blank?
       false
+    end
+
+    def no_stop_without_start
+      response(:unprocessable_entity, ["Start event required before issuing stop event."], nil)
+    end
+
+    def no_start_event(start_event)
+      start_event.nil?
+    end
+
+    def handle_completion_time(start_event)
+      completion_time = Time.now
+      hours_worked = (completion_time - start_event.created_at) / 1.hours
+
+      @params[:measurement] = hours_worked
+      @params[:measurement_type] = "hours_worked"
+      completion_time
     end
   end
 end
