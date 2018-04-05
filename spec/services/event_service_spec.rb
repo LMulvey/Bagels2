@@ -11,23 +11,23 @@ RSpec.describe EventService do
     it "creates an event" do
       before_count = Event.count
       event = { ticket_id: @ticket.id, event_type: "start", user_id: @user.id }
-      result = EventService::Create.call(event)
+      result = EventService::Create.call(@ticket, event)
       expect(result[:record]).to be_instance_of(Event)
       expect(Event.count).to eq(before_count + 1)
     end
 
     it "does not allow invalid event_types" do
       event = { ticket_id: @ticket.id, user_id: @user.id, event_type: "fakeevent" }      
-      expect { EventService::Create.call(event) }.to raise_error(ArgumentError)
+      expect { EventService::Create.call(@ticket, event) }.to raise_error(ArgumentError)
     end
 
     it "requires measurement and measurement_type if event_type is pickup or delivery" do
       ["delivery", "pickup"].each do | event_type |
         create_hash = { ticket_id: @ticket.id, user_id: @user.id, event_type: event_type }
-        result = EventService::Create.call(create_hash)
+        result = EventService::Create.call(@ticket, create_hash)
         expect(result[:errors]).not_to be_empty
         measured = { measurement: 400, measurement_type: "bagels" }.merge(create_hash)
-        new_result = EventService::Create.call(measured)
+        new_result = EventService::Create.call(@ticket, measured)
         expect(new_result[:record]).to be_instance_of(Event)
       end
     end
@@ -36,7 +36,7 @@ RSpec.describe EventService do
       expect(@ticket.status).to eq("active")
       FactoryBot.create(:event, ticket_id: @ticket.id, user_id: @user.id, event_type: "start", created_at: 3.days.ago)
       event = { ticket_id: @ticket.id, event_type: "stop", user_id: @user.id }
-      result = EventService::Create.call(event)
+      result = EventService::Create.call(@ticket, event)
       expect(result[:record]).to be_instance_of(Event)
       expect(@ticket.reload.status).to eq("completed")
       expect(@ticket.completed_at).not_to be_nil
@@ -47,7 +47,7 @@ RSpec.describe EventService do
 
     it "does not allow STOP events without a START event" do
       event = { ticket_id: @ticket.id, event_type: "stop", user_id: @user.id }
-      result = EventService::Create.call(event)
+      result = EventService::Create.call(@ticket, event)
       expect(result[:errors][0]).to eq("Start event required before issuing stop event.")
       expect(result[:record]).to be_nil
     end
@@ -55,7 +55,7 @@ RSpec.describe EventService do
     it "parent ticket status/completed_at not affected when any other event_type is sent" do
       expect(@ticket.status).to eq("active")
       event = { ticket_id: @ticket.id, event_type: "start", user_id: @user.id }
-      result = EventService::Create.call(event)
+      result = EventService::Create.call(@ticket, event)
       expect(result[:record]).to be_instance_of(Event)
       expect(@ticket.reload.status).to eq("active")
       expect(@ticket.completed_at).to be_nil
@@ -64,7 +64,7 @@ RSpec.describe EventService do
     it "will not create an event if ticket status is 'completed'" do
       completed_ticket = FactoryBot.create(:ticket, user_id: @user.id, status: "completed")
       event = { ticket_id: completed_ticket.id, user_id: @user.id, event_type: "start" }
-      result = EventService::Create.call(event)
+      result = EventService::Create.call(completed_ticket, event)
       expect(result[:errors]).not_to be_empty
     end
   end
