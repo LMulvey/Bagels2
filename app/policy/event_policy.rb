@@ -1,17 +1,24 @@
-class TicketPolicy
-  def initialize(ticket:, event:)
+# EventPolicy: handling of conditional policies for events
+class EventPolicy
+  def initialize(event:, ticket:, params:)
     @event = event
     @ticket = ticket
+    @params = params
+  end
+
+  def can_update_event?
+    return false if @event.ticket.status == 'completed'
+    true
   end
 
   def can_create_event?
     return false if measurement_issue
-    return false if @ticket.status === "completed"
+    return false if @ticket.status == 'completed'
     true
   end
 
   def stop_without_start?
-    return false if @ticket.events.find_by(event_type: "start").nil?
+    return false if @ticket.events.find_by(event_type: 'start').nil?
     true
   end
 
@@ -24,7 +31,7 @@ class TicketPolicy
 
   # CONDITIONAL: Is the event type "delivery" or "pickup"?
   def measurement_required?
-    @event.event_type === "delivery" || @event.event_type === "pickup"
+    @event.event_type == 'delivery' || @event.event_type == 'pickup'
   end
 
   # CONDITIONAL: Are either of the measurement values missing?

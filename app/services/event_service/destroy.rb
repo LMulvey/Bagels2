@@ -1,36 +1,33 @@
 module EventService
+  # EventService.Destroy: handle destruction of Events
   class Destroy < ApiBaseService
+    attr_reader :event
+
+    def initialize(event)
+      @event = event
+    end
+
+    def self.call(event)
+      new(event).call
+    end
+
     def call
-      @event = Event.find_by(id: @params[:id])
-      if @event[:event_type] === "stop"
-        handle_stop_event
-      else 
-        handle_event_destroy
-        if @event.errors.any?
-          response(:unprocessable_entity, @event.errors.full_messages, nil)
-        else
-          response(:ok, [], @event)
-        end
+      return delete_event_and_update_ticket if @event.event_type == 'stop'
+      if @event.destroy!
+        true
+      else
+        false
       end
     end
 
     private
 
-    def handle_stop_event
-      is_successful = Event.transaction do
-        ticket = Ticket.find_by!(id: @event[:ticket_id])
-        ticket.update!(:status => "active", :completed_at => nil)
-        handle_event_destroy
+    def delete_event_and_update_ticket
+      Event.transaction do
+        @event.ticket.update!(status: 'active', completed_at: nil)
+        @event.destroy!
+        true
       end
-      if is_successful
-        response(:ok, [], nil)
-      else
-        response(:unprocessable_entity, ["Unable to destroy Event. Contact administrator."], nil)
-      end
-    end
-
-    def handle_event_destroy
-      @event.destroy!
     end
   end
 end
